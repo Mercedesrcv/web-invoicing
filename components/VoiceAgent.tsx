@@ -67,6 +67,13 @@ export default function VoiceAgent() {
   const turnStartRef = useRef(0);
   const firstAudioRef = useRef(false);
   const speechStartRef = useRef<number | null>(null);
+  const utterRef = useRef<SpeechSynthesisUtterance | null>(null);
+  const currentRef = useRef<string | null>(null);
+  const heldRef = useRef<string[] | null>(null);
+  const holdTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bargeT0Ref = useRef<number | null>(null);
+  const falseAlarmsRef = useRef(0);
+  const lastSpeechEndRef = useRef(0);
   const logRef = useRef<HTMLDivElement>(null);
   const langRef = useRef(lang);
   langRef.current = lang;
@@ -110,13 +117,17 @@ export default function VoiceAgent() {
   };
 
   const speakNext = useCallback(() => {
+    if (heldRef.current) return; // pausado por una posible interrupción
     const next = queueRef.current.shift();
     if (!next) {
       speakingRef.current = false;
+      currentRef.current = null;
+      lastSpeechEndRef.current = performance.now();
       afterSpeech();
       return;
     }
     speakingRef.current = true;
+    currentRef.current = next;
     setStat("speaking");
     const u = new SpeechSynthesisUtterance(toSpeakable(next));
     u.lang = langRef.current === "en" ? "en-GB" : "es-ES";
@@ -130,14 +141,26 @@ export default function VoiceAgent() {
         track({ type: "tts_first_audio", channel: "voice", lang: langRef.current, data: { ms: Math.round(performance.now() - turnStartRef.current) } }, sessionRef.current);
       }
     };
-    u.onend = () => speakNext();
-    u.onerror = () => speakNext();
+    // Solo avanza si este enunciado sigue siendo el actual (cancel() también dispara onend/onerror).
+    const done = () => {
+      if (utterRef.current !== u) return;
+      utterRef.current = null;
+      speakNext();
+    };
+    u.onend = done;
+    u.onerror = done;
+    // Guardamos la referencia: Chrome puede recolectar el enunciado y cortar la locución a mitad.
+    utterRef.current = u;
     window.speechSynthesis.speak(u);
   }, [pickVoice]);
 
   const enqueueSpeech = useCallback(
     (s: string) => {
       if (!s.trim()) return;
+      if (heldRef.current) {
+        heldRef.current.push(s.trim());
+        return;
+      }
       queueRef.current.push(s.trim());
       if (!speakingRef.current) speakNext();
     },
@@ -147,7 +170,7 @@ export default function VoiceAgent() {
   /** Habla frase a frase según llega el streaming: baja la latencia percibida. */
   const feedTts = (delta: string, flush = false) => {
     ttsBufRef.current += delta;
-    const re = /^([\s\S]*?[.!?…:])(\s+)/;
+    const re = /^([\s\S]*?[.!?…])(\s+)/;
     let m: RegExpMatchArray | null;
     while ((m = ttsBufRef.current.match(re))) {
       enqueueSpeech(m[1]);
@@ -159,33 +182,78 @@ export default function VoiceAgent() {
     }
   };
 
-  /* ---------------- Barge-in ---------------- */
-  const isEcho = (heard: string) => {
-    const h = words(heard);
-    if (!h.length) return true;
-    const spoken = new Set(words(spokenRef.current + " " + (msgsRef.current[msgsRef.current.length - 1]?.content ?? "")));
-    const overlap = h.filter((w) => spoken.has(w)).length / h.length;
-    return h.length >= 2 && overlap >= 0.7;
+  const stopSpeaking = () => {
+    utterRef.current = null;
+    currentRef.current = null;
+    queueRef.current = [];
+    heldRef.current = null;
+    if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+    window.speechSynthesis?.cancel();
+    speakingRef.current = false;
   };
 
-  const bargeIn = (heard: string) => {
-    const t0 = performance.now();
-    window.speechSynthesis.cancel();
+  /* ---------------- Barge-in ----------------
+   * El micrófono también oye al propio agente (eco). Para no cortar la respuesta
+   * por error, la interrupción es en dos pasos:
+   *  1. Pausa: si se oyen 3+ palabras que no son eco, se para la voz y se guarda
+   *     lo que faltaba por decir (sin abortar la respuesta del servidor).
+   *  2. Confirmación: si llega una frase final del usuario, se descarta lo pendiente
+   *     y se responde a la nueva pregunta. Si no llega en 2,5 s, era ruido o eco:
+   *     se retoma la frase interrumpida desde el principio.
+   */
+  const isEcho = (heard: string, strict = false) => {
+    const h = words(heard);
+    if (!h.length) return true;
+    const ref = spokenRef.current + " " + (currentRef.current ?? "") + " " + (msgsRef.current[msgsRef.current.length - 1]?.content ?? "");
+    const spoken = new Set(words(ref));
+    const overlap = h.filter((w) => spoken.has(w)).length / h.length;
+    return overlap >= (strict ? 0.35 : 0.5);
+  };
+
+  const pauseForBargeIn = () => {
+    if (heldRef.current) return;
+    bargeT0Ref.current = performance.now();
+    heldRef.current = [...(currentRef.current ? [currentRef.current] : []), ...queueRef.current];
     queueRef.current = [];
-    ttsBufRef.current = "";
+    utterRef.current = null;
+    window.speechSynthesis.cancel();
     speakingRef.current = false;
+    currentRef.current = null;
+    setStat("listening");
+    armHoldTimer();
+  };
+
+  const armHoldTimer = () => {
+    if (holdTimerRef.current) clearTimeout(holdTimerRef.current);
+    holdTimerRef.current = setTimeout(resumeAfterFalseAlarm, 2500);
+  };
+
+  const resumeAfterFalseAlarm = () => {
+    const held = heldRef.current;
+    if (!held) return;
+    heldRef.current = null;
+    falseAlarmsRef.current += 1;
+    track({ type: "barge_in", channel: "voice", lang: langRef.current, data: { confirmed: false, falseAlarm: true } }, sessionRef.current);
+    queueRef.current = [...held, ...queueRef.current];
+    if (queueRef.current.length) speakNext();
+    else afterSpeech();
+  };
+
+  const confirmBargeIn = (heard: string) => {
+    const t0 = bargeT0Ref.current ?? performance.now();
     const wasStreaming = streamingRef.current;
-    abortRef.current?.abort();
+    stopSpeaking();
+    ttsBufRef.current = "";
     const stopMs = Math.round(performance.now() - t0);
-    const detectMs = speechStartRef.current ? Math.round(t0 - speechStartRef.current) : null;
+    const detectMs = speechStartRef.current ? Math.max(0, Math.round(t0 - speechStartRef.current)) : null;
+    bargeT0Ref.current = null;
     updateMsgs((m) => {
       const c = [...m];
       const last = c[c.length - 1];
       if (last?.role === "assistant") c[c.length - 1] = { ...last, interrupted: true };
       return c;
     });
-    track({ type: "barge_in", channel: "voice", lang: langRef.current, data: { stopMs, detectMs, duringStream: wasStreaming, words: words(heard).length } }, sessionRef.current);
-    setStat("listening");
+    track({ type: "barge_in", channel: "voice", lang: langRef.current, data: { confirmed: true, stopMs, detectMs, duringStream: wasStreaming, words: words(heard).length } }, sessionRef.current);
   };
 
   /* ---------------- Turno ---------------- */
@@ -204,10 +272,9 @@ export default function VoiceAgent() {
       abortRef.current?.abort();
       const ctrl = new AbortController();
       abortRef.current = ctrl;
-      if (channel === "text") {
-        window.speechSynthesis?.cancel();
-        queueRef.current = [];
-      }
+      // Una pregunta nueva sustituye a lo que quedara por decir de la anterior.
+      if (typeof window !== "undefined" && "speechSynthesis" in window) stopSpeaking();
+      falseAlarmsRef.current = 0;
       firstAudioRef.current = false;
       spokenRef.current = "";
       ttsBufRef.current = "";
@@ -330,16 +397,36 @@ export default function VoiceAgent() {
         if (r.isFinal) fin += r[0].transcript;
         else mid += r[0].transcript;
       }
-      const heard = (fin || mid).trim();
-      const agentBusy = statusRef.current === "speaking" || speakingRef.current;
-      if (heard && agentBusy) {
-        if (words(heard).length >= 2 && !isEcho(heard)) bargeIn(heard);
-        else return; // probablemente eco del propio TTS
+      fin = fin.trim();
+      mid = mid.trim();
+      const speaking = speakingRef.current || statusRef.current === "speaking";
+      const paused = heldRef.current !== null;
+      // Justo después de hablar el reconocedor aún puede devolver el eco: filtro más estricto.
+      const recentlySpoke = performance.now() - lastSpeechEndRef.current < 1500;
+
+      if (speaking) {
+        // Tras falsas alarmas exigimos más palabras para volver a pausar.
+        const minWords = 3 + Math.min(4, falseAlarmsRef.current * 2);
+        const heard = fin || mid;
+        if (words(heard).length >= minWords && !isEcho(heard)) pauseForBargeIn();
+        else return;
       }
+      if (paused || heldRef.current) {
+        if (fin && !isEcho(fin)) {
+          confirmBargeIn(fin);
+          setInterim("");
+          void sendTurn(fin, "voice");
+        } else if (mid && !isEcho(mid)) {
+          setInterim(mid);
+          armHoldTimer(); // el usuario sigue hablando: mantenemos la pausa
+        }
+        return;
+      }
+      if (recentlySpoke && isEcho(fin || mid, true)) return;
       setInterim(mid);
-      if (fin.trim() && !isEcho(fin)) {
+      if (fin && !isEcho(fin, recentlySpoke)) {
         setInterim("");
-        void sendTurn(fin.trim(), "voice");
+        void sendTurn(fin, "voice");
       }
     };
     rec.onerror = (e) => {
@@ -377,9 +464,7 @@ export default function VoiceAgent() {
     setVoiceOn(false);
     recRef.current?.abort();
     recRef.current = null;
-    window.speechSynthesis?.cancel();
-    queueRef.current = [];
-    speakingRef.current = false;
+    stopSpeaking();
     setInterim("");
     setStat(streamingRef.current ? "thinking" : "idle");
   };
@@ -390,8 +475,8 @@ export default function VoiceAgent() {
       const text = (e as CustomEvent<string>).detail;
       if (text) void sendTurn(text, voiceOnRef.current ? "voice" : "text");
     };
-    window.addEventListener("folia:ask", onAsk);
-    return () => window.removeEventListener("folia:ask", onAsk);
+    window.addEventListener("guestbill:ask", onAsk);
+    return () => window.removeEventListener("guestbill:ask", onAsk);
   }, [sendTurn]);
 
   const acceptConsent = (c: Consent) => {

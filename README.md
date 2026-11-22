@@ -1,10 +1,10 @@
-# Folia · Invoice automation para hoteles + agente de voz IA
+# GuestBill · Invoice automation para hoteles + agente de voz IA
 
 Web de producto (ES/EN) para una plataforma de **facturación hotelera automática** con un **agente de voz** que resuelve dudas de preventa e incidencias de facturación, y escala a una persona con contexto limpio. Todas las interacciones se registran (con datos sensibles enmascarados) y se ven en un **panel de métricas**.
 
-> Proyecto de demostración de producto. "Folia" es una marca ficticia (configurable con `NEXT_PUBLIC_BRAND_NAME`) y el hotel de pruebas solo contiene datos inventados.
+> Proyecto de demostración de producto. El nombre del producto se configura con `NEXT_PUBLIC_BRAND_NAME` (por defecto GuestBill) y el hotel de pruebas solo contiene datos inventados.
 
-*English summary: Next.js site for a hotel invoice-automation product, with a browser voice agent powered by Claude (Web Speech API for STT/TTS, text-chat fallback, barge-in), masked interaction logging, an admin metrics dashboard and an 18-case evaluation suite. Deploys to Vercel; see "Despliegue".*
+*English summary: Next.js site for a hotel invoice-automation product, with a browser voice agent powered by Claude (Web Speech API for STT/TTS, text-chat fallback, barge-in), masked interaction logging, an admin metrics dashboard and a 28-case evaluation suite. Deploys to Vercel; see "Despliegue".*
 
 ## Qué incluye
 
@@ -15,8 +15,8 @@ Web de producto (ES/EN) para una plataforma de **facturación hotelera automáti
 | Agente de voz | `components/VoiceAgent.tsx` | Voz en el navegador (Web Speech API) con habla frase a frase, **barge-in** con filtro de eco, y modo texto como alternativa |
 | Cerebro del agente | `lib/agent/*` | Claude (`claude-opus-5-5` por defecto) con streaming, prompt del sistema del diseño de producto y 7 herramientas sobre un hotel de demostración |
 | Monitorización | `app/api/agent`, `app/api/events`, `lib/store/*` | Eventos de uso, transcripciones enmascaradas, latencias, herramientas, escalados, valoraciones |
-| Panel admin | `/admin` | Sesiones, resolución, contención, escalados, latencia p50/p95, calidad por turno, CSAT, intenciones, transcripciones y export CSV |
-| Suite de evaluación | `evals/` | 18 casos (matriz de pruebas, flujos de incidencia y estrés de voz) puntuados con la rúbrica de 4 dimensiones |
+| Panel admin | `/admin` (solo por URL, no aparece en el menú) | Explica cómo se mide la calidad y muestra sesiones, resolución, contención, escalados, latencia p50/p95, calidad por turno, CSAT, intenciones, transcripciones y export CSV |
+| Suite de evaluación | `evals/` | 28 casos (matriz de pruebas, flujos de incidencia, casos nuevos y estrés de voz) puntuados con la rúbrica de 4 dimensiones |
 
 ## Arranque en local
 
@@ -41,6 +41,9 @@ Localizadores del hotel de demostración:
 | `LOC-7781` | Factura de ayer a nombre de particular, para pasarla a empresa |
 | `DQ-420` | Pasarela 420 € vs factura 395 € (late check-out cobrado tras cerrar el folio) |
 | Habitación `304` | Emisión bloqueada: CIF de 8 caracteres y país fiscal vacío |
+| `PA-118` | "Me habéis cobrado dos veces": un cobro y una preautorización ya liberada |
+| `CX-930` | Cancelación con devolución de 120 € y factura aún por 240 € |
+| `OCT-552` | Factura de octubre (periodo cerrado): la rectificativa la aprueba administración |
 
 ## Despliegue en Vercel
 
@@ -51,7 +54,7 @@ Localizadores del hotel de demostración:
 | Variable | Obligatoria | Valor |
 |---|---|---|
 | `ANTHROPIC_API_KEY` | Para el agente real | Tu clave de la consola de Anthropic |
-| `ADMIN_TOKEN` | Sí en producción | Una cadena larga aleatoria; protege `/admin` y las APIs de métricas |
+| `ADMIN_TOKEN` | Sí en producción | La contraseña del panel `/admin` (no se guarda en el código); protege también las APIs de métricas |
 | `DATABASE_URL` | Recomendado | URL de Postgres. Con **Vercel → Storage → Neon (Postgres)** se crea sola como `DATABASE_URL`/`POSTGRES_URL`. También vale Supabase (connection string) |
 | `ANTHROPIC_MODEL` | No | Por defecto `claude-opus-5-5`. Para menos latencia en voz puedes probar `claude-haiku-5-5` |
 | `ANTHROPIC_EFFORT` | No | `low` por defecto (prioriza latencia en voz) |
@@ -92,16 +95,16 @@ Métricas del panel (`lib/metrics.ts`): sesiones y turnos, % voz, **resolución 
 - **Prompt del sistema**: `lib/agent/prompt.ts`. Es el diseñado en la fase de producto, casi literal, con dos bloques añadidos: uso de herramientas y ficha de producto (`lib/agent/knowledge.ts`), que es la única fuente de verdad sobre lo que el producto hace. En producción esa ficha se sustituye por recuperación (RAG) sobre la documentación.
 - **Herramientas** (`lib/agent/tools.ts`): `lookup_booking`, `validate_tax_id`, `check_reconciliation`, `resend_invoice`, `issue_corrective_invoice`, `send_secure_link`, `create_ticket`. Las acciones exigen `confirmed_by_user`, la diferencia de un descuadre la calcula el servidor (no el modelo) y una reserva inexistente devuelve "no encontrada" para que el agente no invente estados.
 - **Llamada a Claude** (`lib/agent/core.ts`): streaming, caché de prompt sobre herramientas y sistema, `effort: low` para latencia, `fallbacks: "default"` (beta `server-side-fallback-2026-07-01`) por si el modelo declina, y manejo de errores tipado. Desactiva el fallback con `ANTHROPIC_DISABLE_FALLBACKS=1`.
-- **Voz**: el texto se habla por frases según llega, lo que baja el tiempo hasta el primer audio. El barge-in corta la locución y aborta la petición en curso cuando el micrófono detecta al menos dos palabras que no son eco de lo que el agente está diciendo. El turno interrumpido se marca en el historial para que el agente retome donde estaba.
+- **Voz**: el texto se habla por frases según llega, lo que baja el tiempo hasta el primer audio. Cada enunciado se guarda en memoria hasta que termina (Chrome puede cortar a mitad uno que pierde su referencia). El micrófono también oye al propio agente, así que la interrupción va en dos pasos: con 3 o más palabras que no son eco se **pausa** la voz y se guarda lo que faltaba; si llega una frase completa del usuario se responde a ella, y si en 2,5 s no llega era ruido o eco y el agente **retoma** la frase interrumpida. Tras cada falsa alarma se exigen más palabras para volver a pausar. El turno interrumpido se marca en el historial para que el agente retome donde estaba.
 
 ## Evaluación
 
 ```bash
-npm run eval              # los 18 casos
+npm run eval              # los 28 casos
 npm run eval -- F-B OBJ-2 # solo algunos
 ```
 
-Casos en `evals/cases.ts`: CP-01 a CP-04 (funcionales), flujos A, B y C (rectificativa, descuadre 420/395, NIF inválido en la 304), objeciones ("ya lo hace mi PMS", privacidad), barge-in, deletreo de NIF y de localizador, fuera de alcance (declaración de IVA), anti-alucinación (reserva inexistente), petición de humano y un huésped en inglés.
+Casos en `evals/cases.ts`: CP-01 a CP-04 (funcionales), flujos A, B y C (rectificativa, descuadre 420/395, NIF inválido en la 304), objeciones ("ya lo hace mi PMS", privacidad), barge-in, deletreo de NIF y de localizador, fuera de alcance (declaración de IVA), anti-alucinación (reserva inexistente), petición de humano y un huésped en inglés. Casos nuevos propuestos: series e impuestos (CP-05), datos fiscales en el check-in online (CP-06), cobro duplicado por preautorización (N-01), reembolso por cancelación (N-02), rectificativa en periodo cerrado (N-03), empresa de otro país de la UE (N-04), petición de datos de otro huésped (N-05), usuario enfadado (N-06), "no te he oído" (N-07) e intento de saltarse las reglas (N-08).
 
 Cada respuesta pasa por comprobaciones deterministas (máximo 3 frases, sin formato, una pregunta por turno, herramientas esperadas, frases obligatorias o prohibidas, escalado sí/no, pide confirmación) y, con clave de API, por un **juez LLM** que puntúa de 1 a 5 **precisión funcional**, **ergonomía de voz** y **gestión del error**. La **latencia** se puntúa por TTFT (5 si es menor de 1,5 s). Un caso pasa si cumple todas las comprobaciones, precisión ≥ 4 y gestión del error ≥ 3.
 

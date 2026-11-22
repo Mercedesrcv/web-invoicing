@@ -1,5 +1,5 @@
 {
-  "name": "folia-invoice-voice-agent",
+  "name": "guestbill-invoice-voice-agent",
   "version": "0.1.0",
   "private": true,
   "scripts": {

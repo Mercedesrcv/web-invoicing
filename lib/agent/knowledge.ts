@@ -12,6 +12,9 @@ export const PRODUCT_KNOWLEDGE = `
 - Series e impuestos: se configuran por establecimiento en el panel (series para facturas, rectificativas y simplificadas; tipos de IVA por concepto; tasa turística como concepto no sujeto cuando corresponde). Cambiar series de un periodo ya emitido requiere a un administrador.
 - Split billing y VCC: reglas de folio que separan la estancia (facturada a la OTA o agencia y cobrada a su tarjeta virtual) de los extras (parking, minibar, tasa turística), que se facturan y cobran al huésped.
 - Rectificativas: una factura emitida nunca se sobrescribe. Se emite una rectificativa (abono) y una nueva factura con los datos correctos. Si el periodo contable está cerrado, lo aprueba administración.
+- Reembolsos y cancelaciones: abono parcial o total mediante rectificativa vinculada a la devolución registrada en la pasarela.
+- Preautorizaciones: se registran y se liberan automáticamente al cerrar el folio; el plazo en que el banco deja de mostrarlas no depende de la plataforma.
+- Clientes extranjeros: validación de formato de VAT europeo; la factura recoge el VAT del cliente.
 - Envío: email, SMS o WhatsApp con enlace de descarga; reenvío bajo demanda; registro de entrega.
 - Conciliación: cruza importes de la pasarela, la VCC y el folio del PMS; marca descuadres con su causa probable (cargos tras el cierre, tasas, preautorizaciones no liberadas, retrasos de sync) y no fuerza cierres.
 - Cumplimiento en España: numeración correlativa e inalterable, registros encadenados con huella (hash) y código QR según el formato VeriFactu; soporte TicketBAI en territorios forales y envío al SII cuando el establecimiento está obligado, según su configuración fiscal. No hay certificaciones, sellos ni homologaciones que puedas citar; para otros países o dudas normativas concretas, ofrece un especialista.

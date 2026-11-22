@@ -1,1 +1,1 @@
-export const BRAND = process.env.NEXT_PUBLIC_BRAND_NAME || "Folia";
+export const BRAND = process.env.NEXT_PUBLIC_BRAND_NAME || "GuestBill";

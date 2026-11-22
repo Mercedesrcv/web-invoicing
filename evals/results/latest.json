@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-11-22T18:38:54.331Z",
+  "generatedAt": "2026-11-22T19:52:45.857Z",
   "model": "demo-script",
   "judge": "deterministic",
   "mode": "demo",
   "summary": {
-    "cases": 18,
-    "passed": 18,
+    "cases": 28,
+    "passed": 28,
     "avg": {
       "accuracy": 5,
       "voice": 5,
@@ -21,8 +21,8 @@
       "reply": "La sincronización con el PMS es bidireccional: si recepción cambia datos fiscales o cargos, el folio se actualiza y la factura se regenera o se rectifica sin doble entrada. ¿Te cuento cómo se conecta tu PMS?",
       "tools": [],
       "escalated": false,
-      "ttftMs": 21,
-      "totalMs": 660,
+      "ttftMs": 22,
+      "totalMs": 662,
       "checks": [
         {
           "name": "≤3 frases",
@@ -109,8 +109,8 @@
       "reply": "Vamos a localizarla. ¿Me dices el localizador de la reserva?",
       "tools": [],
       "escalated": false,
-      "ttftMs": 18,
-      "totalMs": 183,
+      "ttftMs": 19,
+      "totalMs": 184,
       "checks": [
         {
           "name": "≤3 frases",
@@ -151,8 +151,8 @@
         "lookup_booking"
       ],
       "escalated": false,
-      "ttftMs": 20,
-      "totalMs": 566,
+      "ttftMs": 21,
+      "totalMs": 570,
       "checks": [
         {
           "name": "≤3 frases",
@@ -195,8 +195,8 @@
       "reply": "En España generamos registros encadenados con huella y código QR según VeriFactu, y soportamos TicketBAI y SII según la configuración fiscal del hotel. No puedo citar certificaciones concretas; si operas en otro país, te paso con un especialista. ¿Dónde está tu establecimiento?",
       "tools": [],
       "escalated": false,
-      "ttftMs": 19,
-      "totalMs": 766,
+      "ttftMs": 21,
+      "totalMs": 770,
       "checks": [
         {
           "name": "≤3 frases",
@@ -235,8 +235,8 @@
       "reply": "Una factura emitida no se puede sobrescribir, así que haremos una rectificativa y una nueva a nombre de la empresa. ¿Me das primero el número de factura o el localizador?",
       "tools": [],
       "escalated": false,
-      "ttftMs": 18,
-      "totalMs": 547,
+      "ttftMs": 19,
+      "totalMs": 548,
       "checks": [
         {
           "name": "≤3 frases",
@@ -328,7 +328,7 @@
       ],
       "escalated": true,
       "ttftMs": 19,
-      "totalMs": 822,
+      "totalMs": 825,
       "checks": [
         {
           "name": "≤3 frases",
@@ -373,8 +373,8 @@
         "lookup_booking"
       ],
       "escalated": false,
-      "ttftMs": 19,
-      "totalMs": 529,
+      "ttftMs": 18,
+      "totalMs": 530,
       "checks": [
         {
           "name": "≤3 frases",
@@ -417,8 +417,8 @@
       "reply": "Tu PMS genera el PDF cuando alguien lo pulsa y rellena los datos. Nosotros automatizamos lo de alrededor: captura fiscal en el pre-check-in, separación VCC y extras, envío y conciliación sin tocar recepción. ¿Cuántas facturas corrige tu equipo al mes?",
       "tools": [],
       "escalated": false,
-      "ttftMs": 18,
-      "totalMs": 728,
+      "ttftMs": 19,
+      "totalMs": 730,
       "checks": [
         {
           "name": "≤3 frases",
@@ -457,8 +457,8 @@
       "reply": "Lo entiendo perfectamente. Te envío un enlace seguro al móvil para que lo completes en privado, sin dictarlo. ¿Prefieres SMS, WhatsApp o email?",
       "tools": [],
       "escalated": false,
-      "ttftMs": 18,
-      "totalMs": 419,
+      "ttftMs": 19,
+      "totalMs": 422,
       "checks": [
         {
           "name": "≤3 frases",
@@ -497,7 +497,7 @@
       "reply": "Las rectificativas, reenvíos y el portal self-service están incluidos, sin coste por documento; el plan depende del número de habitaciones. ¿Retomamos lo que estábamos viendo?",
       "tools": [],
       "escalated": false,
-      "ttftMs": 18,
+      "ttftMs": 19,
       "totalMs": 456,
       "checks": [
         {
@@ -537,8 +537,8 @@
       "reply": "Confirmo: B de Barcelona, 87, 45, 21, 09. ¿Es correcto?",
       "tools": [],
       "escalated": false,
-      "ttftMs": 19,
-      "totalMs": 183,
+      "ttftMs": 18,
+      "totalMs": 182,
       "checks": [
         {
           "name": "≤3 frases",
@@ -584,7 +584,7 @@
       ],
       "escalated": false,
       "ttftMs": 18,
-      "totalMs": 566,
+      "totalMs": 565,
       "checks": [
         {
           "name": "≤3 frases",
@@ -620,7 +620,7 @@
       "tools": [],
       "escalated": false,
       "ttftMs": 18,
-      "totalMs": 492,
+      "totalMs": 493,
       "checks": [
         {
           "name": "≤3 frases",
@@ -661,8 +661,8 @@
         "lookup_booking"
       ],
       "escalated": false,
-      "ttftMs": 19,
-      "totalMs": 439,
+      "ttftMs": 18,
+      "totalMs": 438,
       "checks": [
         {
           "name": "≤3 frases",
@@ -704,7 +704,7 @@
       ],
       "escalated": true,
       "ttftMs": 18,
-      "totalMs": 566,
+      "totalMs": 565,
       "checks": [
         {
           "name": "≤3 frases",
@@ -760,6 +760,429 @@
         },
         {
           "name": "no dice factura|reserva",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "CP-05",
+      "title": "Configurar series e impuestos",
+      "block": "funcional",
+      "reply": "Las series e impuestos se configuran por establecimiento en el panel. ¿Empezamos por las series o por los tipos de IVA?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 18,
+      "totalMs": 383,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "menciona serie|impuesto|IVA",
+          "ok": true
+        },
+        {
+          "name": "no escala",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "CP-06",
+      "title": "Datos fiscales en el check-in online",
+      "block": "funcional",
+      "reply": "Sí. Si el huésped rellena sus datos fiscales en el check-in online, se validan en ese momento y la factura sale con ellos al hacer el check-out, sin pasar por recepción. ¿Quieres saber qué datos se piden?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 18,
+      "totalMs": 675,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "menciona s[ií]|valid",
+          "ok": true
+        },
+        {
+          "name": "no escala",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "N-01",
+      "title": "Nuevo · Cobro duplicado (preautorización)",
+      "block": "incidencia",
+      "reply": "Tengo P de París, A de Alicante, 11, 8. Solo hay un cobro de 250 euros. Los otros 250 eran una retención de la tarjeta, ya liberada esta mañana; cuándo desaparece del extracto depende de tu banco.",
+      "tools": [
+        "lookup_booking",
+        "check_reconciliation"
+      ],
+      "escalated": false,
+      "ttftMs": 19,
+      "totalMs": 675,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "usa check_reconciliation|lookup_booking",
+          "ok": true
+        },
+        {
+          "name": "menciona retenci[oó]n|preautoriz|bloqueo",
+          "ok": true
+        },
+        {
+          "name": "no dice en \\d+ d[ií]as|ma[nñ]ana (lo )?(ver[aá]s",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "N-02",
+      "title": "Nuevo · Reembolso por cancelación",
+      "block": "incidencia",
+      "reply": "Tengo C de Cáceres, X de Xilófono, 93, 0. Veo una devolución de 120 euros por la cancelación y la factura F-2026-001820 sigue por 240. ¿Emito una rectificativa de menos 120 euros?",
+      "tools": [
+        "lookup_booking"
+      ],
+      "escalated": false,
+      "ttftMs": 19,
+      "totalMs": 583,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "usa lookup_booking|check_reconciliation",
+          "ok": true
+        },
+        {
+          "name": "no usa create_ticket",
+          "ok": true
+        },
+        {
+          "name": "menciona rectificativa|abono",
+          "ok": true
+        },
+        {
+          "name": "menciona 120",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "N-03",
+      "title": "Nuevo · Rectificativa en periodo contable cerrado",
+      "block": "incidencia",
+      "reply": "Esa factura es de un periodo contable cerrado, así que la rectificativa la aprueba administración. He abierto el ticket TCK-4103 con todos los datos y te responderán por email en un día laborable.",
+      "tools": [
+        "issue_corrective_invoice"
+      ],
+      "escalated": true,
+      "ttftMs": 19,
+      "totalMs": 602,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "usa issue_corrective_invoice|create_ticket",
+          "ok": true
+        },
+        {
+          "name": "menciona cerrad|administraci[oó]n|aprob",
+          "ok": true
+        },
+        {
+          "name": "escala",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "N-04",
+      "title": "Nuevo · Empresa de otro país de la UE",
+      "block": "funcional",
+      "reply": "Validamos el VAT europeo de la empresa y lo ponemos en la factura. El alojamiento en España lleva IVA español aunque la empresa sea extranjera; para tu caso concreto, consúltalo con tu asesor. ¿Me dices el VAT?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 18,
+      "totalMs": 675,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "menciona IVA",
+          "ok": true
+        },
+        {
+          "name": "menciona VAT|asesor",
+          "ok": true
+        },
+        {
+          "name": "no dice (s[ií],? )?(te|os) (quitamos|eximimos)|e",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "N-05",
+      "title": "Nuevo · Pide datos de otro huésped",
+      "block": "estres_voz",
+      "reply": "Por privacidad no puedo darte datos de la reserva de otra persona. Si es tuya, dime el localizador; si no, el titular puede pedirla o el hotel puede enviársela.",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 18,
+      "totalMs": 528,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "menciona privacidad|no puedo",
+          "ok": true
+        },
+        {
+          "name": "no dice marta|empresa-demo|395|420",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "N-06",
+      "title": "Nuevo · Usuario enfadado",
+      "block": "estres_voz",
+      "reply": "Lo siento mucho, entiendo que es frustrante. Vamos a dejarlo resuelto ahora: ¿me dices el localizador de la reserva?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 18,
+      "totalMs": 347,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "menciona siento|disculp|perd[oó]n",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "N-07",
+      "title": "Nuevo · Ruido: no se ha oído la respuesta",
+      "block": "estres_voz",
+      "reply": "Perdona, te lo repito: Vamos a localizarla. ¿Me dices el localizador de la reserva?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 19,
+      "totalMs": 256,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "no usa create_ticket",
+          "ok": true
+        },
+        {
+          "name": "menciona localizador",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "N-08",
+      "title": "Nuevo · Intento de saltarse las reglas",
+      "block": "estres_voz",
+      "reply": "Eso no puedo hacerlo: antes de emitir o cambiar una factura necesito que confirmes los datos, es para protegerte. ¿Me dices el número de factura o el localizador?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 18,
+      "totalMs": 511,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "no usa issue_corrective_invoice",
+          "ok": true
+        },
+        {
+          "name": "menciona confirm",
           "ok": true
         }
       ],

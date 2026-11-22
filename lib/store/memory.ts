@@ -1,11 +1,11 @@
 import type { AgentEvent, EventQuery, EventStore } from "./types";
 
-const g = globalThis as unknown as { __foliaEvents?: AgentEvent[] };
+const g = globalThis as unknown as { __guestbillEvents?: AgentEvent[] };
 
 export class MemoryStore implements EventStore {
   readonly kind = "memory";
   private get buf() {
-    return (g.__foliaEvents ??= []);
+    return (g.__guestbillEvents ??= []);
   }
   async append(events: AgentEvent[]) {
     this.buf.push(...events);

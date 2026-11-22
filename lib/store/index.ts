@@ -27,7 +27,7 @@ export function getStore(): EventStore {
   } else {
     // En Vercel el sistema de ficheros del proyecto es de solo lectura: usamos /tmp (efímero).
     const file = process.env.VERCEL
-      ? path.join(os.tmpdir(), "folia-events.jsonl")
+      ? path.join(os.tmpdir(), "guestbill-events.jsonl")
       : process.env.LOG_FILE_PATH || ".data/events.jsonl";
     store = new FileStore(file);
   }

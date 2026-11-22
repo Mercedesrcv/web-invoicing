@@ -10,7 +10,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let initial: Lang = "es";
     try {
-      const saved = localStorage.getItem("folia.lang");
+      const saved = localStorage.getItem("guestbill.lang");
       if (saved === "es" || saved === "en") initial = saved;
       else if (!navigator.language.toLowerCase().startsWith("es")) initial = "en";
     } catch {
@@ -26,7 +26,7 @@ export function LangProvider({ children }: { children: ReactNode }) {
   const setLang = (l: Lang) => {
     setLangState(l);
     try {
-      localStorage.setItem("folia.lang", l);
+      localStorage.setItem("guestbill.lang", l);
     } catch {
       /* ignore */
     }

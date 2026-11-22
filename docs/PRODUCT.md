@@ -44,7 +44,7 @@ Decisiones de diseño:
 | ¿Es rápido? | TTFT p50/p95, primer audio p50, corte por barge-in | `/admin` |
 | ¿Habla bien? | Calidad por turno (reglas de voz) y alertas por regla | `/admin` |
 | ¿Gusta? | CSAT 1 a 5 | `/admin` |
-| ¿Es fiable antes de lanzar un cambio? | Suite de 18 casos con rúbrica (precisión, voz, error, latencia) | `npm run eval` |
+| ¿Es fiable antes de lanzar un cambio? | Suite de 28 casos con rúbrica (precisión, voz, error, latencia) | `npm run eval` |
 
 Objetivos orientativos para un piloto: contención por encima del 60 % en incidencias B2C, 0 alucinaciones de estado en la suite, primer audio por debajo de 1,5 s en p50 y corte por barge-in por debajo de 500 ms.
 

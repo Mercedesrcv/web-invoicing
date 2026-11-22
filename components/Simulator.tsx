@@ -97,7 +97,7 @@ export default function Simulator() {
               ? t.scenarios[4].q
               : t.scenarios[2].q;
     document.getElementById("agent")?.scrollIntoView({ behavior: "smooth" });
-    window.dispatchEvent(new CustomEvent("folia:ask", { detail: q }));
+    window.dispatchEvent(new CustomEvent("guestbill:ask", { detail: q }));
   };
 
   const set = <K extends keyof typeof cfg>(k: K, v: (typeof cfg)[K]) => setCfg((c) => ({ ...c, [k]: v }));

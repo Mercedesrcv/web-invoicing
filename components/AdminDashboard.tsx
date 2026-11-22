@@ -43,7 +43,7 @@ const INTENT_LABEL: Record<string, [string, string]> = {
 const ms = (v: number | null | undefined) => (v === null || v === undefined ? "—" : v >= 1000 ? `${(v / 1000).toFixed(1)} s` : `${v} ms`);
 
 export default function AdminDashboard() {
-  const { lang } = useLang();
+  const { lang, t } = useLang();
   const L = (es: string, en: string) => (lang === "en" ? en : es);
   const [token, setToken] = useState("");
   const [days, setDays] = useState(7);
@@ -53,42 +53,53 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [session, setSession] = useState<{ id: string; events: Ev[] } | null>(null);
 
+  const headers = useCallback((tk?: string) => ({ Authorization: `Bearer ${tk ?? token}` }), [token]);
+
+  const load = useCallback(
+    async (tk?: string) => {
+      const useToken = tk ?? token;
+      setLoading(true);
+      setErr(null);
+      try {
+        const r = await fetch(`/api/admin/metrics?days=${days}`, { headers: headers(useToken), cache: "no-store" });
+        if (r.status === 401) throw new Error(lang === "en" ? "Wrong password" : "Contraseña incorrecta");
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        setData(await r.json());
+        try {
+          sessionStorage.setItem("guestbill.admin", useToken);
+        } catch {
+          /* ignore */
+        }
+        const e = await fetch("/api/admin/evals", { headers: headers(useToken) });
+        if (e.ok) setEvals(await e.json());
+      } catch (e) {
+        setErr((e as Error).message);
+        setData(null);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [days, headers, token, lang],
+  );
+
+  // Al entrar: si la contraseña ya se usó en esta pestaña, carga directamente.
   useEffect(() => {
+    let saved = "";
     try {
-      setToken(sessionStorage.getItem("folia.admin") ?? "");
+      saved = sessionStorage.getItem("guestbill.admin") ?? "";
     } catch {
       /* ignore */
     }
-  }, []);
-
-  const headers = useCallback(() => ({ Authorization: `Bearer ${token}` }), [token]);
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setErr(null);
-    try {
-      const r = await fetch(`/api/admin/metrics?days=${days}`, { headers: headers(), cache: "no-store" });
-      if (r.status === 401) throw new Error(L("Token no válido", "Invalid token"));
-      if (!r.ok) throw new Error(`HTTP ${r.status}`);
-      setData(await r.json());
-      try {
-        sessionStorage.setItem("folia.admin", token);
-      } catch {
-        /* ignore */
-      }
-      const e = await fetch("/api/admin/evals", { headers: headers() });
-      if (e.ok) setEvals(await e.json());
-    } catch (e) {
-      setErr((e as Error).message);
-      setData(null);
-    } finally {
-      setLoading(false);
+    if (saved) {
+      setToken(saved);
+      void load(saved);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [days, headers, token]);
+  }, []);
 
+  // Cambiar el periodo recarga si ya hay datos.
   useEffect(() => {
-    void load();
+    if (data) void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [days]);
 
@@ -151,7 +162,7 @@ export default function AdminDashboard() {
               void load();
             }}
           >
-            <input type="password" placeholder="ADMIN_TOKEN" value={token} onChange={(e) => setToken(e.target.value)} aria-label="Admin token" className="field" style={{ padding: "9px 12px", border: "1px solid var(--line)", borderRadius: 10, background: "var(--surface)" }} />
+            <input type="password" placeholder={L("Contraseña", "Password")} value={token} onChange={(e) => setToken(e.target.value)} aria-label={L("Contraseña", "Password")} className="field" style={{ padding: "9px 12px", border: "1px solid var(--line)", borderRadius: 10, background: "var(--surface)" }} />
             <select value={days} onChange={(e) => setDays(Number(e.target.value))} aria-label={L("Periodo", "Period")} style={{ padding: "9px 12px", border: "1px solid var(--line)", borderRadius: 10, background: "var(--surface)" }}>
               {[1, 7, 30, 90].map((d) => (
                 <option key={d} value={d}>{d} {L("días", "days")}</option>
@@ -162,6 +173,20 @@ export default function AdminDashboard() {
           </form>
         </div>
         {err && <p className="notice">{err}</p>}
+
+        <section className="panel how" aria-labelledby="how-title">
+          <h2 id="how-title" style={{ fontSize: "1.3rem" }}>{t.quality.title}</h2>
+          <p className="muted">{t.quality.sub}</p>
+          <div className="grid-4" style={{ margin: "14px 0" }}>
+            {t.quality.kpis.map((k) => (
+              <article key={k.t} className="card kpi-card">
+                <h3>{k.t}</h3>
+                <p>{k.d}</p>
+              </article>
+            ))}
+          </div>
+          <p className="small muted" style={{ margin: 0 }}>{t.quality.evals}</p>
+        </section>
 
         {m && (
           <>

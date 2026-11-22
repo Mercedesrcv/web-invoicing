@@ -205,6 +205,8 @@ dd.bad { color: var(--bad); font-weight: 700; } dd.ok { color: var(--ok); font-w
 .text-ctrl input { flex: 1; padding: 12px 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--bg); min-width: 0; }
 .scenarios { border-top: 1px solid var(--line); padding-top: 10px; display: grid; gap: 8px; }
 .scenarios .chip { font-size: 0.8rem; padding: 5px 10px; }
+.scenarios .chips { max-height: 168px; overflow-y: auto; }
+.admin .how { margin: 18px 0; }
 .rating { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 0.9rem; background: var(--bg-alt); padding: 8px 12px; border-radius: 12px; }
 .star { border: 0; background: none; font-size: 1.3rem; color: var(--accent); cursor: pointer; padding: 0 2px; }
 .consent { position: absolute; inset: 0; background: color-mix(in srgb, var(--bg) 70%, transparent); backdrop-filter: blur(4px); display: grid; place-items: center; border-radius: 20px; padding: 16px; z-index: 5; }

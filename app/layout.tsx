@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { LangProvider } from "@/components/LangProvider";
 import "./globals.css";
 
-const brand = process.env.NEXT_PUBLIC_BRAND_NAME || "Folia";
+const brand = process.env.NEXT_PUBLIC_BRAND_NAME || "GuestBill";
 
 export const metadata: Metadata = {
   title: `${brand} · Invoice automation + voice agent`,

@@ -29,7 +29,6 @@ export default function Header() {
           <a href="#use-cases">{t.nav.useCases}</a>
           <a href="#simulator">{t.nav.simulator}</a>
           <a href="#agent">{t.nav.agent}</a>
-          <a href="#quality">{t.nav.quality}</a>
         </nav>
         <div className="row">
           <LangToggle />

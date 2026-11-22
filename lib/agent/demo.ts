@@ -64,15 +64,43 @@ const R: Record<string, { es: string; en: string }> = {
     es: "Las series e impuestos se configuran por establecimiento en el panel. ¿Empezamos por las series o por los tipos de IVA?",
     en: "Series and taxes are configured per property in the dashboard. Shall we start with series or VAT rates?",
   },
+  injection: {
+    es: "Eso no puedo hacerlo: antes de emitir o cambiar una factura necesito que confirmes los datos, es para protegerte. ¿Me dices el número de factura o el localizador?",
+    en: "I can't do that: before issuing or changing an invoice I need you to confirm the details, it's for your protection. What's the invoice number or booking reference?",
+  },
+  third_party: {
+    es: "Por privacidad no puedo darte datos de la reserva de otra persona. Si es tuya, dime el localizador; si no, el titular puede pedirla o el hotel puede enviársela.",
+    en: "For privacy I can't share details of someone else's booking. If it's yours, give me the reference; otherwise the holder or the hotel can request it.",
+  },
+  frustration: {
+    es: "Lo siento mucho, entiendo que es frustrante. Vamos a dejarlo resuelto ahora: ¿me dices el localizador de la reserva?",
+    en: "I'm really sorry, I understand it's frustrating. Let's get it sorted now: what's your booking reference?",
+  },
+  duplicate_charge: {
+    es: "Vamos a comprobarlo antes de nada, porque muchas veces es una retención de la tarjeta y no un segundo cobro. ¿Me dices el localizador?",
+    en: "Let's check it first, because it's often a card hold rather than a second charge. What's your booking reference?",
+  },
+  refund: {
+    es: "Cuando hay una devolución, la factura no se borra: se emite una rectificativa por el importe devuelto. ¿Me dices el localizador para revisarlo?",
+    en: "When there's a refund, the invoice isn't deleted: we issue a corrective invoice for the refunded amount. What's the booking reference?",
+  },
+  eu_company: {
+    es: "Validamos el VAT europeo de la empresa y lo ponemos en la factura. El alojamiento en España lleva IVA español aunque la empresa sea extranjera; para tu caso concreto, consúltalo con tu asesor. ¿Me dices el VAT?",
+    en: "We validate the company's EU VAT number and put it on the invoice. Accommodation in Spain carries Spanish VAT even for foreign companies; for your specific case, check with your advisor. What's the VAT number?",
+  },
+  precheckin: {
+    es: "Sí. Si el huésped rellena sus datos fiscales en el check-in online, se validan en ese momento y la factura sale con ellos al hacer el check-out, sin pasar por recepción. ¿Quieres saber qué datos se piden?",
+    en: "Yes. If the guest enters tax details during online check-in, they're validated right away and the invoice is issued with them at check-out, with no front-desk work. Want to know which details we ask for?",
+  },
   other: {
     es: "Puedo ayudarte con facturas no recibidas, rectificativas, descuadres de cobro o dudas del producto. ¿Qué necesitas?",
     en: "I can help with missing invoices, corrective invoices, payment mismatches or product questions. What do you need?",
   },
 };
 
-const LOCATOR_RE = /\b(X9K4P|BK-?55120|LOC-?7781|DQ-?420|R304-?88|RES-\d{5})\b/i;
+const LOCATOR_RE = /\b(X9K4P|BK-?55120|LOC-?7781|DQ-?420|R304-?88|PA-?118|CX-?930|OCT-?552|RES-\d{5})\b/i;
 const GENERIC_CODE_RE = /^\s*([A-Z]{1,4}-?\d{3,6}|[A-Z0-9]{5,8})\s*\.?\s*$/i;
-const TAX_ID_RE = /^\s*([A-HJ-NP-SUVWXYZ][\s-]?\d{7,8}[0-9A-Z]?|\d{8}[\s-]?[A-Z])\s*\.?\s*$/i;
+const TAX_ID_RE = /^\s*([A-HJ-NP-SUVWXYZ][\s-]?\d{7,8}[0-9A-Z]?|\d{8}[\s-]?[A-Z]|(?:AT|BE|DE|DK|FI|FR|IE|IT|LU|NL|PL|PT|SE)[\s-]?[0-9A-Z]{8,12})\s*\.?\s*$/i;
 
 const SPOKEN: Record<string, string> = {
   equis: "X", ka: "K", pe: "P", be: "B", uve: "V", zeta: "Z", ye: "Y", erre: "R", ele: "L", eme: "M", ene: "N", ce: "C", de: "D", efe: "F", ge: "G", hache: "H", jota: "J", te: "T", a: "A", e: "E", i: "I", o: "O", u: "U", s: "S", ese: "S", cu: "Q",
@@ -121,7 +149,35 @@ export async function* demoTurn(uiLang: "es" | "en", history: ChatMsg[]): AsyncG
   const room = last.match(/\b(?:habitaci[oó]n|room|hab\.?)\s*(\d{3})\b/i)?.[1] ?? (/^\s*\d{3}\s*$/.test(last) ? last.trim() : undefined);
   const intent = classifyIntent(last);
 
-  if (history.length === 1 && /^(hola|hello|hi|buenas)\b/i.test(last.trim()) && last.trim().split(/\s+/).length <= 4) {
+  // Confirmación ("sí, adelante") de una acción propuesta en el turno anterior.
+  const prevAssistant = [...history].reverse().find((m) => m.role === "assistant")?.content ?? "";
+  const affirmative = /^\s*(s[ií]|vale|ok|adelante|correcto|claro|yes|sure|go ahead)(?=[\s,.!]|$)/i.test(last) && /\?\s*$/.test(prevAssistant) && /(emito|rectificativa|issue|corrective)/i.test(prevAssistant);
+  const ctxLoc = all.match(LOCATOR_RE)?.[1];
+
+  if (affirmative && ctxLoc) {
+    const b = runTool("lookup_booking", { locator: ctxLoc }).result as { invoices?: Array<{ invoice_id: string; total_eur: number }>; refunds?: Array<{ amount_eur: number }> };
+    const inv = b.invoices?.[0];
+    const isRefund = /CX-?930/i.test(ctxLoc);
+    const input = isRefund
+      ? { invoice_id: inv?.invoice_id, reason: "refund", refund_amount: b.refunds?.[0]?.amount_eur, confirmed_by_user: true }
+      : { invoice_id: inv?.invoice_id, reason: "company_change", company_name: "Empresa del cliente", tax_id: "B87452108", fiscal_address: "Dirección confirmada", confirmed_by_user: true };
+    const out = runTool("issue_corrective_invoice", input);
+    tools.push({ name: "issue_corrective_invoice", input, result: out.result });
+    const r = out.result as { status?: string; ticket_id?: string; corrective_invoice_id?: string; new_invoice_id?: string; sent_to_email_hint?: string };
+    if (r.status === "pending_admin_approval") {
+      escalated = true;
+      ticketId = r.ticket_id;
+      text = lang === "en"
+        ? `That invoice belongs to a closed accounting period, so accounting has to approve the correction. I've opened ticket ${ticketId} with all the details; you'll get an answer by email within one business day.`
+        : `Esa factura es de un periodo contable cerrado, así que la rectificativa la aprueba administración. He abierto el ticket ${ticketId} con todos los datos y te responderán por email en un día laborable.`;
+    } else if (r.status === "issued") {
+      text = lang === "en"
+        ? `Done: corrective invoice ${r.corrective_invoice_id}${r.new_invoice_id ? ` and new invoice ${r.new_invoice_id}` : ""} have been sent to ${r.sent_to_email_hint}. Anything else?`
+        : `Hecho: he emitido la rectificativa ${r.corrective_invoice_id}${r.new_invoice_id ? ` y la nueva factura ${r.new_invoice_id}` : ""}, enviadas a ${r.sent_to_email_hint}. ¿Algo más?`;
+    } else {
+      text = lang === "en" ? "I couldn't issue it with those details. Shall I pass it to the support team?" : "No he podido emitirla con esos datos. ¿Lo paso al equipo de soporte?";
+    }
+  } else if (history.length === 1 && /^(hola|hello|hi|buenas)\b/i.test(last.trim()) && last.trim().split(/\s+/).length <= 4) {
     text = R.greeting[lang];
   } else if (taxId) {
     text = lang === "en" ? `Confirming: ${readBack(taxId, "en")}. Is that right?` : `Confirmo: ${readBack(taxId, "es")}. ¿Es correcto?`;
@@ -131,6 +187,12 @@ export async function* demoTurn(uiLang: "es" | "en", history: ChatMsg[]): AsyncG
     text = lang === "en"
       ? `I can't find any booking with ${readBack(unknownCode, "en")}. Could you check the reference, or give me the guest's email?`
       : `No encuentro ninguna reserva con ${readBack(unknownCode, "es")}. ¿Puedes revisar el localizador o darme el email del huésped?`;
+  } else if (intent === "repeat") {
+    const prev = [...history].reverse().find((m) => m.role === "assistant")?.content.replace(/\s*\[[^\]]*\]\s*$/, "");
+    const first = prev?.split(/(?<=[.!?])\s+/).slice(-2).join(" ");
+    text = first ? (lang === "en" ? `Sorry, I'll repeat: ${first}` : `Perdona, te lo repito: ${first}`) : R.other[lang];
+  } else if (["injection", "third_party", "frustration", "duplicate_charge", "refund", "eu_company", "precheckin"].includes(intent) && !loc) {
+    text = R[intent][lang];
   } else if (intent === "human_request" || intent === "out_of_scope" || intent === "privacy" || intent === "pricing" || intent === "objection_pms" || intent === "compliance") {
     text = R[intent][lang];
     if (intent === "human_request") {
@@ -151,6 +213,24 @@ export async function* demoTurn(uiLang: "es" | "en", history: ChatMsg[]): AsyncG
       text = lang === "en"
         ? `The invoice failed because the company tax ID has only 8 characters and the tax country is empty. Do you want to dictate it now, or shall I send the guest a secure link?`
         : `La factura falla porque el CIF de la empresa tiene solo 8 caracteres y el país fiscal está vacío. ¿Quieres dictármelo ahora o envío un enlace seguro al huésped?`;
+    } else if (/PA-?118/i.test(loc ?? "")) {
+      const rec = runTool("check_reconciliation", { booking_id: "PA-118" });
+      tools.push({ name: "check_reconciliation", input: { booking_id: "PA-118" }, result: rec.result });
+      text = lang === "en"
+        ? `${confirm}There's only one charge of 250 euros. The other 250 was a card hold, already released this morning; when it disappears from your statement depends on your bank.`
+        : `${confirm}Solo hay un cobro de 250 euros. Los otros 250 eran una retención de la tarjeta, ya liberada esta mañana; cuándo desaparece del extracto depende de tu banco.`;
+    } else if (/CX-?930/i.test(loc ?? "")) {
+      text = lang === "en"
+        ? `${confirm}I see a refund of 120 euros for the cancellation, and invoice F-2026-001820 is still for 240. Shall I issue a corrective invoice for minus 120 euros?`
+        : `${confirm}Veo una devolución de 120 euros por la cancelación y la factura F-2026-001820 sigue por 240. ¿Emito una rectificativa de menos 120 euros?`;
+    } else if (/OCT-?552/i.test(loc ?? "")) {
+      const t = runTool("create_ticket", { priority: "normal", category: "invoice_issue", summary: "Rectificativa sobre factura de periodo cerrado (octubre)", booking_id: "RES-09877", handoff_to_human: false });
+      tools.push({ name: "create_ticket", input: {}, result: t.result });
+      escalated = true;
+      ticketId = t.ticketId;
+      text = lang === "en"
+        ? `${confirm}That invoice belongs to October, which is already closed, so accounting has to approve the correction. I've opened ticket ${ticketId}; you'll get an answer by email within one business day.`
+        : `${confirm}Esa factura es de octubre, un periodo ya cerrado, así que la rectificativa la aprueba administración. He abierto el ticket ${ticketId} y te responderán por email en un día laborable.`;
     } else if (/DQ-?420/i.test(loc ?? "")) {
       const rec = runTool("check_reconciliation", { booking_id: "DQ-420" });
       tools.push({ name: "check_reconciliation", input: { booking_id: "DQ-420" }, result: rec.result });

@@ -2,8 +2,8 @@
 /** Cliente de monitorización del navegador: sesión, consentimiento y envío de eventos. */
 
 export type Consent = "full" | "metrics_only";
-const CONSENT_KEY = "folia.consent";
-const SESSION_KEY = "folia.session";
+const CONSENT_KEY = "guestbill.consent";
+const SESSION_KEY = "guestbill.session";
 
 function safe<T>(fn: () => T, fallback: T): T {
   try {

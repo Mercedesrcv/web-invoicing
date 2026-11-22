@@ -1,5 +1,4 @@
 "use client";
-import Link from "next/link";
 import { BRAND } from "@/lib/brand";
 import Header from "./Header";
 import { useLang } from "./LangProvider";
@@ -86,28 +85,10 @@ export default function Landing() {
               <h2>{t.agent.title}</h2>
               <p className="lead">{t.agent.sub}</p>
               <ul className="principles">
-                <li>{t.quality.kpis[2].d}</li>
                 <li>{t.agent.consentNote}</li>
               </ul>
             </div>
             <VoiceAgent />
-          </div>
-        </section>
-
-        <section id="quality" className="section">
-          <div className="wrap">
-            <h2>{t.quality.title}</h2>
-            <p className="lead narrow">{t.quality.sub}</p>
-            <div className="grid-4">
-              {t.quality.kpis.map((k) => (
-                <article key={k.t} className="card kpi-card">
-                  <h3>{k.t}</h3>
-                  <p>{k.d}</p>
-                </article>
-              ))}
-            </div>
-            <p className="narrow">{t.quality.evals}</p>
-            <Link className="btn" href="/admin">{t.quality.openAdmin} →</Link>
           </div>
         </section>
       </main>

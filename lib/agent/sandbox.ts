@@ -20,10 +20,14 @@ export interface Booking {
   payment: "card" | "vcc" | "transfer";
   checkIn: string;
   checkOut: string;
-  status: "in_house" | "checked_out";
+  status: "in_house" | "checked_out" | "cancelled";
   pmsSync: "ok" | "delayed";
   folio: FolioLine[];
   gatewayCharged: number;
+  /** Preautorizaciones de tarjeta (retenciones) asociadas a la reserva. */
+  preauths?: Array<{ amount: number; status: "held" | "released"; releasedAt?: string }>;
+  /** Devoluciones ya procesadas en la pasarela. */
+  refunds?: Array<{ amount: number; at: string; reason: string }>;
   invoices: Array<{
     id: string;
     to: string;
@@ -132,6 +136,56 @@ export const BOOKINGS: Booking[] = [
     invoices: [
       { id: "BORRADOR-304", to: "Nordic Consulting S.L.", taxId: "B8745210", total: 540, status: "error", error: "TAX_ID_INVALID: el NIF/CIF tiene 8 caracteres y el país fiscal está vacío" },
     ],
+  },
+  {
+    id: "RES-10433",
+    locator: "PA-118",
+    room: "507",
+    guestName: "Lucía Torres",
+    email: "lucia.torres@gmail.com",
+    channel: "direct",
+    payment: "card",
+    checkIn: "2026-11-20",
+    checkOut: "2026-11-22",
+    status: "checked_out",
+    pmsSync: "ok",
+    folio: [{ concept: "Alojamiento 2 noches", amount: 250, billTo: "guest" }],
+    gatewayCharged: 250,
+    preauths: [{ amount: 250, status: "released", releasedAt: "2026-11-22T09:30:00+01:00" }],
+    invoices: [{ id: "F-2026-001861", to: "Lucía Torres", total: 250, status: "sent", delivery: "delivered" }],
+  },
+  {
+    id: "RES-10391",
+    locator: "CX-930",
+    room: "—",
+    guestName: "Pablo Iglesias Rey",
+    email: "pablo.irey@yahoo.es",
+    channel: "direct",
+    payment: "card",
+    checkIn: "2026-11-24",
+    checkOut: "2026-11-26",
+    status: "cancelled",
+    pmsSync: "ok",
+    folio: [{ concept: "Prepago 2 noches", amount: 240, billTo: "guest" }],
+    gatewayCharged: 240,
+    refunds: [{ amount: 120, at: "2026-11-21T16:05:00+01:00", reason: "Cancelación con 50 % de penalización" }],
+    invoices: [{ id: "F-2026-001820", to: "Pablo Iglesias Rey", total: 240, status: "sent", delivery: "delivered" }],
+  },
+  {
+    id: "RES-09877",
+    locator: "OCT-552",
+    room: "210",
+    guestName: "Ana Beltrán",
+    email: "ana.beltran@consultora-demo.es",
+    channel: "direct",
+    payment: "card",
+    checkIn: "2026-10-14",
+    checkOut: "2026-10-16",
+    status: "checked_out",
+    pmsSync: "ok",
+    folio: [{ concept: "Alojamiento 2 noches", amount: 286, billTo: "guest" }],
+    gatewayCharged: 286,
+    invoices: [{ id: "F-2026-001512", to: "Ana Beltrán", total: 286, status: "sent", delivery: "delivered", periodClosed: true }],
   },
 ];
 
