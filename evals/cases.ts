@@ -1,0 +1,240 @@
+import type { ChatMsg } from "../lib/agent/core";
+
+/**
+ * Suite de evaluación del agente de voz.
+ * Cada caso fija un historial y un último mensaje del usuario; el agente genera
+ * una respuesta (pudiendo usar herramientas del hotel de demostración) que se
+ * puntúa con comprobaciones deterministas + juez LLM sobre la rúbrica:
+ *   precisión funcional · ergonomía de voz · gestión del error · latencia.
+ */
+export interface EvalCase {
+  id: string;
+  block: "funcional" | "incidencia" | "estres_voz";
+  title: string;
+  profile: "B2B" | "B2C";
+  lang: "es" | "en";
+  history?: ChatMsg[];
+  user: string;
+  expect: {
+    toolsAny?: string[]; // debe llamar al menos a una
+    toolsNone?: string[]; // no debe llamar a ninguna
+    mustMatch?: RegExp[]; // todas deben aparecer
+    mustNotMatch?: RegExp[]; // ninguna debe aparecer
+    escalate?: boolean; // true: debe escalar · false: no debe
+    asksConfirmation?: boolean; // debe terminar pidiendo confirmación
+  };
+  rubric: string; // qué debe valorar el juez
+}
+
+export const CASES: EvalCase[] = [
+  {
+    id: "CP-01",
+    block: "funcional",
+    title: "Sincronización con el PMS",
+    profile: "B2B",
+    lang: "es",
+    user: "¿Cómo se sincronizan las facturas con nuestro PMS si el huésped pide cambios en recepción?",
+    expect: { mustMatch: [/bidireccional|en tiempo real|autom[aá]tic/i], toolsNone: ["create_ticket"], escalate: false },
+    rubric: "Explica la sincronización bidireccional: un cambio de datos fiscales o cargos actualiza el folio y regenera o rectifica la factura sin doble entrada. Sin tecnicismos innecesarios y ofrece profundizar en integraciones. No enumera marcas de PMS inventadas.",
+  },
+  {
+    id: "CP-02",
+    block: "funcional",
+    title: "VCC de Booking con extras",
+    profile: "B2B",
+    lang: "es",
+    user: "¿Qué pasa cuando una reserva viene de Booking con tarjeta virtual y el huésped pide factura por sus extras?",
+    expect: { mustMatch: [/OTA|Booking|agencia/i, /extra|parking|minibar/i], escalate: false },
+    rubric: "Distingue factura de estancia (a la OTA, cobrada a la VCC) y factura de extras (al huésped). Breve.",
+  },
+  {
+    id: "CP-03",
+    block: "funcional",
+    title: "Factura no recibida tras el check-out",
+    profile: "B2C",
+    lang: "es",
+    user: "Hice check-out esta mañana pero no tengo mi factura en el correo.",
+    expect: { mustNotMatch: [/se (te )?ha (re)?enviado ya|ya est[aá] reenviada/i], escalate: false },
+    rubric: "Pide un único identificador (localizador o email) y nada más en ese turno. No afirma ningún estado sin haber consultado.",
+  },
+  {
+    id: "CP-03b",
+    block: "funcional",
+    title: "Factura no recibida: diagnóstico con localizador",
+    profile: "B2C",
+    lang: "es",
+    history: [
+      { role: "user", content: "Hice check-out esta mañana pero no tengo mi factura en el correo." },
+      { role: "assistant", content: "Vamos a localizarla. ¿Me dices el localizador de la reserva?" },
+    ],
+    user: "Es X9K4P.",
+    expect: { toolsAny: ["lookup_booking"], mustMatch: [/rebot|no (se )?(pudo|ha podido) entregar|devuelto/i], escalate: false },
+    rubric: "Confirma el localizador (idealmente deletreado o agrupado), consulta la reserva, informa de que el correo rebotó y ofrece reenviar confirmando el email. No da el email completo.",
+  },
+  {
+    id: "CP-04",
+    block: "funcional",
+    title: "VeriFactu / TicketBAI / SII sin inventar certificaciones",
+    profile: "B2B",
+    lang: "es",
+    user: "¿Cumplís con la normativa de facturación electrónica y envío a Hacienda? VeriFactu, TicketBAI, SII…",
+    expect: { mustNotMatch: [/certificad[oa]s? (por|oficial)|homologad[oa]s? por|sello oficial|ISO ?\d{4,5}/i], escalate: false },
+    rubric: "Explica trazabilidad, numeración correlativa, hash/QR y envío según configuración fiscal. No inventa certificaciones ni homologaciones. Ofrece especialista si es otro país.",
+  },
+  {
+    id: "F-A",
+    block: "incidencia",
+    title: "Rectificativa: de particular a empresa",
+    profile: "B2C",
+    lang: "es",
+    user: "Necesito cambiar la factura de mi estancia de ayer; salió a mi nombre y tiene que ir a nombre de mi empresa.",
+    expect: { mustMatch: [/rectificativa|abono/i], mustNotMatch: [/(modific|cambi|sobrescrib|edit)\w* (la )?factura (original|emitida)? ?(directamente|sin m[aá]s)/i], escalate: false },
+    rubric: "Explica que una factura emitida no se sobrescribe: rectificativa más nueva factura. Pide un solo dato para empezar (localizador o número de factura). No pide razón social, CIF y dirección a la vez.",
+  },
+  {
+    id: "F-A2",
+    block: "incidencia",
+    title: "Rectificativa: confirmación del CIF dictado",
+    profile: "B2C",
+    lang: "es",
+    history: [
+      { role: "user", content: "Necesito que la factura de mi estancia de ayer vaya a nombre de mi empresa. El localizador es LOC-7781." },
+      { role: "assistant", content: "Tengo la factura F-2026-001799 a tu nombre. Haremos una rectificativa y una nueva a nombre de la empresa. ¿Cuál es la razón social?" },
+      { role: "user", content: "Nordic Consulting S.L." },
+      { role: "assistant", content: "Anotado, Nordic Consulting S.L. ¿Me dices el CIF?" },
+    ],
+    user: "B87452108",
+    expect: { asksConfirmation: true, toolsNone: ["issue_corrective_invoice"], mustMatch: [/87.{0,3}45.{0,3}21.{0,3}08|8 ?7 ?4 ?5 ?2 ?1 ?0 ?8/] },
+    rubric: "Repite el CIF agrupado o con referencia por letra (B de Barcelona) y pide confirmación ANTES de emitir nada. No emite la rectificativa en este turno.",
+  },
+  {
+    id: "F-B",
+    block: "incidencia",
+    title: "Descuadre 420 € vs 395 €",
+    profile: "B2B",
+    lang: "es",
+    user: "La pasarela de pago cobró 420 euros, pero la factura automática salió por 395. La reserva es DQ-420.",
+    expect: { toolsAny: ["check_reconciliation", "lookup_booking"], escalate: true, mustMatch: [/25/] },
+    rubric: "Diagnostica la diferencia de 25 euros (cargo de late check-out tras cerrar el folio y/o retraso de sync). No fuerza el cierre. Crea ticket de prioridad alta con ID de reserva, importe pasarela, importe factura y diferencia, y lo resume en voz.",
+  },
+  {
+    id: "F-C",
+    block: "incidencia",
+    title: "Error de emisión por NIF inválido (habitación 304)",
+    profile: "B2B",
+    lang: "es",
+    user: "El sistema me marca error al generar la factura de la habitación 304.",
+    expect: { toolsAny: ["lookup_booking"], mustMatch: [/NIF|CIF|identificador fiscal|pa[ií]s/i], escalate: false },
+    rubric: "Identifica exactamente qué falla (el NIF/CIF tiene un formato inválido y/o el país fiscal está vacío) y ofrece dictarlo ahora o enviar un enlace self-service al huésped.",
+  },
+  {
+    id: "OBJ-1",
+    block: "estres_voz",
+    title: "Objeción: ya lo hace mi PMS",
+    profile: "B2B",
+    lang: "es",
+    user: "Nuestro PMS ya genera PDFs de facturas, ¿para qué queremos otra herramienta?",
+    expect: { escalate: false, mustMatch: [/pre-?check-?in|captura|VCC|concilia|autom/i] },
+    rubric: "Reconoce el valor del PMS y señala el hueco: captura de datos fiscales en pre-check-in, split VCC/extras, envío multicanal y conciliación sin intervención de recepción. Sin ser agresivo; termina con una pregunta de descubrimiento.",
+  },
+  {
+    id: "OBJ-2",
+    block: "estres_voz",
+    title: "Privacidad: no quiere dictar datos",
+    profile: "B2C",
+    lang: "es",
+    user: "No me fío de dictar el CIF y el correo por teléfono.",
+    expect: { mustMatch: [/enlace|link/i], escalate: false },
+    rubric: "Valida la preocupación y ofrece de inmediato un enlace seguro por SMS, WhatsApp o email. No insiste en que lo dicte.",
+  },
+  {
+    id: "BARGE",
+    block: "estres_voz",
+    title: "Barge-in y cambio de contexto",
+    profile: "B2B",
+    lang: "es",
+    history: [
+      { role: "user", content: "¿Cómo funciona lo de las rectificativas cuando un cliente quiere la factura a nombre de su empresa?" },
+      { role: "assistant", content: "Cuando la factura ya está emitida no se sobrescribe. Se emite una rectificativa que anula la original y [interrumpido por el usuario]" },
+    ],
+    user: "Espera, perdona, antes dime si esto tiene coste extra para el hotel.",
+    expect: { mustMatch: [/inclu|sin coste|no tiene coste/i], mustNotMatch: [/\d+ ?(€|euros) (al mes|por)/i] },
+    rubric: "Responde directamente a la duda de coste (incluido, sin coste por documento; sin inventar cifras) y ofrece retomar la explicación de rectificativas.",
+  },
+  {
+    id: "SPELL-1",
+    block: "estres_voz",
+    title: "Deletreo de NIF dictado rápido",
+    profile: "B2C",
+    lang: "es",
+    history: [
+      { role: "user", content: "Quiero la factura a nombre de mi empresa." },
+      { role: "assistant", content: "Perfecto. ¿Me dices el CIF de la empresa?" },
+    ],
+    user: "B-87452109",
+    expect: { asksConfirmation: true, mustMatch: [/87.{0,3}45.{0,3}21.{0,3}09/], mustNotMatch: [/(es|est[aá]) (correcto|v[aá]lido)\.|lo doy por v[aá]lido/i] },
+    rubric: "Confirma de forma agrupada (por ejemplo: B de Barcelona, 87, 45, 21, 09) y pregunta si es correcto, en lugar de asumir el dato. Si valida y no cuadra el dígito de control, lo dice sin dramatizar.",
+  },
+  {
+    id: "SPELL-2",
+    block: "estres_voz",
+    title: "Localizador alfanumérico",
+    profile: "B2C",
+    lang: "es",
+    history: [
+      { role: "user", content: "No me ha llegado la factura." },
+      { role: "assistant", content: "Lo reviso. ¿Me dices el localizador de la reserva?" },
+    ],
+    user: "equis nueve ka cuatro pe",
+    expect: { mustMatch: [/X[^0-9]{0,20}9[^K]{0,6}K[^4]{0,20}4[^P]{0,6}P/i] },
+    rubric: "Interpreta X9K4P y lo repite letra a letra (con referencias claras) para confirmar antes de actuar, o lo confirma junto al resultado de la consulta.",
+  },
+  {
+    id: "OOS",
+    block: "estres_voz",
+    title: "Fuera de alcance: declaración de IVA",
+    profile: "B2B",
+    lang: "es",
+    user: "¿Me puedes hacer tú mismo la declaración trimestral del IVA del hotel con estas facturas?",
+    expect: { mustMatch: [/no (realizo|presento|puedo|hago)|no es algo que/i, /export|libro|gestor/i] },
+    rubric: "Rechaza con claridad (no presenta impuestos ni hace asesoría) y ofrece la alternativa: exportar libros de facturas emitidas y rectificativas para la gestoría.",
+  },
+  {
+    id: "HALLU",
+    block: "incidencia",
+    title: "Anti-alucinación: reserva inexistente",
+    profile: "B2C",
+    lang: "es",
+    history: [
+      { role: "user", content: "¿Me dices si ya está emitida mi factura?" },
+      { role: "assistant", content: "Claro. ¿Me dices el localizador?" },
+    ],
+    user: "ZZ-90210",
+    expect: { toolsAny: ["lookup_booking"], mustNotMatch: [/est[aá] (emitida|enviada)|se envi[oó]/i] },
+    rubric: "Consulta, no encuentra la reserva y lo dice con transparencia, pidiendo otro dato o confirmando el localizador. No inventa ningún estado.",
+  },
+  {
+    id: "HUMAN",
+    block: "incidencia",
+    title: "Pide hablar con una persona",
+    profile: "B2B",
+    lang: "es",
+    history: [
+      { role: "user", content: "Tenemos facturas duplicadas en el PMS desde la actualización de ayer." },
+      { role: "assistant", content: "Vaya, lo siento. ¿Me dices el ID de una de las reservas afectadas?" },
+    ],
+    user: "Mira, prefiero hablar con una persona.",
+    expect: { escalate: true },
+    rubric: "Acepta sin resistencia, crea ticket y resume en voz: qué ocurre (duplicados tras actualización), qué datos tiene y qué pasa después.",
+  },
+  {
+    id: "EN-1",
+    block: "funcional",
+    title: "Huésped en inglés",
+    profile: "B2C",
+    lang: "en",
+    user: "Hi, I checked out today and never got my invoice.",
+    expect: { mustMatch: [/booking|reference|email/i], mustNotMatch: [/factura|reserva/i] },
+    rubric: "Responds in English, short, asks for one identifier.",
+  },
+];

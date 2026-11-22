@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+.env
+.env.local
+.env*.local
+.data
+evals/results/run-*.json
+!evals/results/.gitkeep
+*.tsbuildinfo
+next-env.d.ts
+.vercel

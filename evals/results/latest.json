@@ -1,0 +1,776 @@
+{
+  "generatedAt": "2026-11-22T18:38:54.331Z",
+  "model": "demo-script",
+  "judge": "deterministic",
+  "mode": "demo",
+  "summary": {
+    "cases": 18,
+    "passed": 18,
+    "avg": {
+      "accuracy": 5,
+      "voice": 5,
+      "error_handling": 5,
+      "latency": 5
+    }
+  },
+  "results": [
+    {
+      "id": "CP-01",
+      "title": "Sincronización con el PMS",
+      "block": "funcional",
+      "reply": "La sincronización con el PMS es bidireccional: si recepción cambia datos fiscales o cargos, el folio se actualiza y la factura se regenera o se rectifica sin doble entrada. ¿Te cuento cómo se conecta tu PMS?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 21,
+      "totalMs": 660,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "no usa create_ticket",
+          "ok": true
+        },
+        {
+          "name": "menciona bidireccional|en tiempo real|autom[aá]ti",
+          "ok": true
+        },
+        {
+          "name": "no escala",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "CP-02",
+      "title": "VCC de Booking con extras",
+      "block": "funcional",
+      "reply": "Con tarjeta virtual de Booking, la estancia se factura a la OTA y los extras como parking o minibar van en una factura aparte al huésped. ¿Quieres que lo veamos con una reserva concreta?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 19,
+      "totalMs": 622,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "menciona OTA|Booking|agencia",
+          "ok": true
+        },
+        {
+          "name": "menciona extra|parking|minibar",
+          "ok": true
+        },
+        {
+          "name": "no escala",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "CP-03",
+      "title": "Factura no recibida tras el check-out",
+      "block": "funcional",
+      "reply": "Vamos a localizarla. ¿Me dices el localizador de la reserva?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 18,
+      "totalMs": 183,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "no dice se (te )?ha (re)?enviado ya|ya est[aá] r",
+          "ok": true
+        },
+        {
+          "name": "no escala",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "CP-03b",
+      "title": "Factura no recibida: diagnóstico con localizador",
+      "block": "funcional",
+      "reply": "Tengo X de Xilófono, 9, K de kilo, 4, P de París. La factura F-2026-001842 se envió esta mañana pero el correo rebotó. ¿La reenvío a l…@gmail.com o a otra dirección?",
+      "tools": [
+        "lookup_booking"
+      ],
+      "escalated": false,
+      "ttftMs": 20,
+      "totalMs": 566,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "usa lookup_booking",
+          "ok": true
+        },
+        {
+          "name": "menciona rebot|no (se )?(pudo|ha podido) entregar",
+          "ok": true
+        },
+        {
+          "name": "no escala",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "CP-04",
+      "title": "VeriFactu / TicketBAI / SII sin inventar certificaciones",
+      "block": "funcional",
+      "reply": "En España generamos registros encadenados con huella y código QR según VeriFactu, y soportamos TicketBAI y SII según la configuración fiscal del hotel. No puedo citar certificaciones concretas; si operas en otro país, te paso con un especialista. ¿Dónde está tu establecimiento?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 19,
+      "totalMs": 766,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "no dice certificad[oa]s? (por|oficial)|homologad",
+          "ok": true
+        },
+        {
+          "name": "no escala",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "F-A",
+      "title": "Rectificativa: de particular a empresa",
+      "block": "incidencia",
+      "reply": "Una factura emitida no se puede sobrescribir, así que haremos una rectificativa y una nueva a nombre de la empresa. ¿Me das primero el número de factura o el localizador?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 18,
+      "totalMs": 547,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "menciona rectificativa|abono",
+          "ok": true
+        },
+        {
+          "name": "no dice (modific|cambi|sobrescrib|edit)\\w* (la )",
+          "ok": true
+        },
+        {
+          "name": "no escala",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "F-A2",
+      "title": "Rectificativa: confirmación del CIF dictado",
+      "block": "incidencia",
+      "reply": "Confirmo: B de Barcelona, 87, 45, 21, 08. ¿Es correcto?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 19,
+      "totalMs": 183,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "no usa issue_corrective_invoice",
+          "ok": true
+        },
+        {
+          "name": "menciona 87.{0,3}45.{0,3}21.{0,3}08|8 ?7 ?4 ?5 ?2",
+          "ok": true
+        },
+        {
+          "name": "pide confirmación",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "F-B",
+      "title": "Descuadre 420 € vs 395 €",
+      "block": "incidencia",
+      "reply": "La pasarela cobró 420 euros y la factura es de 395, una diferencia de 25: hay un late check-out cobrado en el TPV después de cerrar el folio. No fuerzo el cierre; he abierto el ticket TCK-4101 de prioridad alta con ambos importes para soporte.",
+      "tools": [
+        "lookup_booking",
+        "check_reconciliation",
+        "create_ticket"
+      ],
+      "escalated": true,
+      "ttftMs": 19,
+      "totalMs": 822,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "usa check_reconciliation|lookup_booking",
+          "ok": true
+        },
+        {
+          "name": "menciona 25",
+          "ok": true
+        },
+        {
+          "name": "escala",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "F-C",
+      "title": "Error de emisión por NIF inválido (habitación 304)",
+      "block": "incidencia",
+      "reply": "La factura falla porque el CIF de la empresa tiene solo 8 caracteres y el país fiscal está vacío. ¿Quieres dictármelo ahora o envío un enlace seguro al huésped?",
+      "tools": [
+        "lookup_booking"
+      ],
+      "escalated": false,
+      "ttftMs": 19,
+      "totalMs": 529,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "usa lookup_booking",
+          "ok": true
+        },
+        {
+          "name": "menciona NIF|CIF|identificador fiscal|pa[ií]s",
+          "ok": true
+        },
+        {
+          "name": "no escala",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "OBJ-1",
+      "title": "Objeción: ya lo hace mi PMS",
+      "block": "estres_voz",
+      "reply": "Tu PMS genera el PDF cuando alguien lo pulsa y rellena los datos. Nosotros automatizamos lo de alrededor: captura fiscal en el pre-check-in, separación VCC y extras, envío y conciliación sin tocar recepción. ¿Cuántas facturas corrige tu equipo al mes?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 18,
+      "totalMs": 728,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "menciona pre-?check-?in|captura|VCC|concilia|auto",
+          "ok": true
+        },
+        {
+          "name": "no escala",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "OBJ-2",
+      "title": "Privacidad: no quiere dictar datos",
+      "block": "estres_voz",
+      "reply": "Lo entiendo perfectamente. Te envío un enlace seguro al móvil para que lo completes en privado, sin dictarlo. ¿Prefieres SMS, WhatsApp o email?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 18,
+      "totalMs": 419,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "menciona enlace|link",
+          "ok": true
+        },
+        {
+          "name": "no escala",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "BARGE",
+      "title": "Barge-in y cambio de contexto",
+      "block": "estres_voz",
+      "reply": "Las rectificativas, reenvíos y el portal self-service están incluidos, sin coste por documento; el plan depende del número de habitaciones. ¿Retomamos lo que estábamos viendo?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 18,
+      "totalMs": 456,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "menciona inclu|sin coste|no tiene coste",
+          "ok": true
+        },
+        {
+          "name": "no dice \\d+ ?(€|euros) (al mes|por)",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "SPELL-1",
+      "title": "Deletreo de NIF dictado rápido",
+      "block": "estres_voz",
+      "reply": "Confirmo: B de Barcelona, 87, 45, 21, 09. ¿Es correcto?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 19,
+      "totalMs": 183,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "menciona 87.{0,3}45.{0,3}21.{0,3}09",
+          "ok": true
+        },
+        {
+          "name": "no dice (es|est[aá]) (correcto|v[aá]lido)\\.|lo d",
+          "ok": true
+        },
+        {
+          "name": "pide confirmación",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "SPELL-2",
+      "title": "Localizador alfanumérico",
+      "block": "estres_voz",
+      "reply": "Tengo X de Xilófono, 9, K de kilo, 4, P de París. La factura F-2026-001842 se envió esta mañana pero el correo rebotó. ¿La reenvío a l…@gmail.com o a otra dirección?",
+      "tools": [
+        "lookup_booking"
+      ],
+      "escalated": false,
+      "ttftMs": 18,
+      "totalMs": 566,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "menciona X[^0-9]{0,20}9[^K]{0,6}K[^4]{0,20}4[^P]{",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "OOS",
+      "title": "Fuera de alcance: declaración de IVA",
+      "block": "estres_voz",
+      "reply": "No realizo presentaciones fiscales ni asesoría contable. Lo que sí puedo es exportarte el libro de facturas emitidas y rectificativas listo para tu gestoría. ¿Te lo preparo?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 18,
+      "totalMs": 492,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "menciona no (realizo|presento|puedo|hago)|no es a",
+          "ok": true
+        },
+        {
+          "name": "menciona export|libro|gestor",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "HALLU",
+      "title": "Anti-alucinación: reserva inexistente",
+      "block": "incidencia",
+      "reply": "No encuentro ninguna reserva con Z de Zaragoza, Z de Zaragoza, 90, 21, 0. ¿Puedes revisar el localizador o darme el email del huésped?",
+      "tools": [
+        "lookup_booking"
+      ],
+      "escalated": false,
+      "ttftMs": 19,
+      "totalMs": 439,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "usa lookup_booking",
+          "ok": true
+        },
+        {
+          "name": "no dice est[aá] (emitida|enviada)|se envi[oó]",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "HUMAN",
+      "title": "Pide hablar con una persona",
+      "block": "incidencia",
+      "reply": "Claro, te paso con una persona. He dejado un ticket con lo que me has contado para que no tengas que repetirlo; te contactarán en unos 15 minutos en horario laboral.",
+      "tools": [
+        "create_ticket"
+      ],
+      "escalated": true,
+      "ttftMs": 18,
+      "totalMs": 566,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "escala",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    },
+    {
+      "id": "EN-1",
+      "title": "Huésped en inglés",
+      "block": "funcional",
+      "reply": "Let's find it. Could you give me the booking reference?",
+      "tools": [],
+      "escalated": false,
+      "ttftMs": 18,
+      "totalMs": 182,
+      "checks": [
+        {
+          "name": "≤3 frases",
+          "ok": true
+        },
+        {
+          "name": "sin formato visual",
+          "ok": true
+        },
+        {
+          "name": "≤1 pregunta",
+          "ok": true
+        },
+        {
+          "name": "menciona booking|reference|email",
+          "ok": true
+        },
+        {
+          "name": "no dice factura|reserva",
+          "ok": true
+        }
+      ],
+      "scores": {
+        "accuracy": 5,
+        "voice": 5,
+        "error_handling": 5,
+        "latency": 5
+      },
+      "notes": "Puntuación determinista (sin juez LLM).",
+      "pass": true
+    }
+  ]
+}
